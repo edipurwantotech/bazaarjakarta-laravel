@@ -95,4 +95,100 @@
         @endif
     </div>
 </section>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let isLoading = false;
+    let currentPage = {{ $events->currentPage() }};
+    let hasMorePages = {{ $events->hasMorePages() ? 'true' : 'false' }};
+    const eventsContainer = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3');
+    const paginationContainer = document.querySelector('.mt-12');
+    
+    // Hide pagination container
+    if (paginationContainer) {
+        paginationContainer.style.display = 'none';
+    }
+    
+    // Function to load more events
+    function loadMoreEvents() {
+        if (isLoading || !hasMorePages) return;
+        
+        isLoading = true;
+        
+        // Show loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'col-span-3 text-center mt-4';
+        loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin text-orange-600 text-2xl"></i>';
+        eventsContainer.appendChild(loadingDiv);
+        
+        // Fetch next page
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', currentPage + 1);
+        
+        fetch(url.toString())
+            .then(response => response.text())
+            .then(html => {
+                // Create a temporary DOM parser
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extract new event cards
+                const newEvents = doc.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 > div');
+                
+                // Remove loading indicator
+                loadingDiv.remove();
+                
+                // Add new events to the container
+                newEvents.forEach((event, index) => {
+                    // Clone the event element to avoid moving it from the parsed document
+                    const eventClone = event.cloneNode(true);
+                    // Add animation delay
+                    eventClone.style.animationDelay = `${(currentPage - 1) * 6 + index) * 0.1}s`;
+                    eventsContainer.appendChild(eventClone);
+                });
+                
+                // Update current page
+                currentPage++;
+                
+                // Check if there are more pages by looking for pagination in the fetched HTML
+                const paginationLinks = doc.querySelectorAll('a[href*="page="]');
+                hasMorePages = paginationLinks.length > {{ $events->lastPage() - $events->currentPage() }};
+                
+                // If no more pages, show message
+                if (!hasMorePages) {
+                    const noMoreMessage = document.createElement('div');
+                    noMoreMessage.className = 'col-span-3 text-center mt-8';
+                    noMoreMessage.innerHTML = '<p class="text-gray-500">Semua event telah ditampilkan</p>';
+                    eventsContainer.appendChild(noMoreMessage);
+                }
+                
+                isLoading = false;
+            })
+            .catch(error => {
+                console.error('Error loading more events:', error);
+                loadingDiv.remove();
+                isLoading = false;
+            });
+    }
+    
+    // Infinite scroll implementation
+    let scrollTimeout;
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function() {
+            // Check if user has scrolled to near bottom of page
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            
+            // Load more when user is within 200px of the bottom
+            if (scrollTop + windowHeight >= documentHeight - 200) {
+                loadMoreEvents();
+            }
+        }, 100);
+    });
+});
+</script>
+@endpush
 @endsection

@@ -152,55 +152,40 @@
     </section>
 
     <!-- RELATED EVENTS -->
+    @if($relatedEvents->count() > 0)
     <section class="py-10 bg-gray-50">
       <div class="container mx-auto px-4 md:px-8">
         <h2 class="text-2xl font-bold mb-6">Event Terkait</h2>
         <div class="grid md:grid-cols-3 gap-6">
+          @foreach($relatedEvents as $index => $relatedEvent)
           <div class="bg-white rounded-xl shadow overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
             <div class="h-48 relative overflow-hidden">
-              <img src="{{ asset('images/poster2.jpg') }}" alt="Related Event" class="w-full h-full object-cover" />
+              @if($relatedEvent->thumbnail)
+                <img src="{{ asset('storage/' . $relatedEvent->thumbnail) }}" alt="{{ $relatedEvent->title }}" class="w-full h-full object-cover" />
+              @else
+                <div class="absolute inset-0 bg-gradient-to-br {{ $index % 3 == 0 ? 'from-orange-400 to-orange-600' : ($index % 3 == 1 ? 'from-purple-400 to-pink-600' : 'from-green-400 to-blue-600') }}"></div>
+              @endif
               <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <span class="absolute top-4 left-4 bg-orange-500 text-white text-xs px-3 py-1 rounded-full">Fashion</span>
+              @if($relatedEvent->categories->isNotEmpty())
+                <span class="absolute top-4 left-4 bg-{{ $index % 3 == 0 ? 'orange' : ($index % 3 == 1 ? 'purple' : 'green') }}-500 text-white text-xs px-3 py-1 rounded-full">
+                  {{ $relatedEvent->categories->first()->name }}
+                </span>
+              @endif
             </div>
             <div class="p-4">
-              <h3 class="font-bold text-lg text-orange-600 mb-2">Nusantara Grand Fair 2025</h3>
-              <p class="text-sm text-gray-600 mb-3">1-5 Februari 2025 | Grand Indonesia</p>
-              <a href="{{ route('event.detail', 'nusantara-grand-fair-2025') }}" class="text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors inline-flex items-center gap-1">
+              <h3 class="font-bold text-lg text-orange-600 mb-2">{{ $relatedEvent->title }}</h3>
+              <p class="text-sm text-gray-600 mb-3">
+                {{ $relatedEvent->start_date->format('d F Y') }}
+                @if($relatedEvent->location) | {{ $relatedEvent->location }} @endif
+              </p>
+              <a href="{{ route('event.detail', $relatedEvent->slug) }}" class="text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors inline-flex items-center gap-1">
                 Lihat Detail <i class="fas fa-arrow-right text-xs"></i>
               </a>
             </div>
           </div>
-
-          <div class="bg-white rounded-xl shadow overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-            <div class="h-48 relative overflow-hidden">
-              <img src="{{ asset('images/poster3.jpg') }}" alt="Related Event" class="w-full h-full object-cover" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <span class="absolute top-4 left-4 bg-purple-500 text-white text-xs px-3 py-1 rounded-full">Kuliner</span>
-            </div>
-            <div class="p-4">
-              <h3 class="font-bold text-lg text-orange-600 mb-2">Style & Bites: Fashion & Kuliner</h3>
-              <p class="text-sm text-gray-600 mb-3">7-11 Juli 2025 | The City Tower</p>
-              <a href="{{ route('event.detail', 'style-bites') }}" class="text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors inline-flex items-center gap-1">
-                Lihat Detail <i class="fas fa-arrow-right text-xs"></i>
-              </a>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-xl shadow overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-            <div class="h-48 relative overflow-hidden">
-              <img src="{{ asset('images/poster4.jpg') }}" alt="Related Event" class="w-full h-full object-cover" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              <span class="absolute top-4 left-4 bg-green-500 text-white text-xs px-3 py-1 rounded-full">Sale</span>
-            </div>
-            <div class="p-4">
-              <h3 class="font-bold text-lg text-orange-600 mb-2">Specta Flash Sale</h3>
-              <p class="text-sm text-gray-600 mb-3">2-4 Juli 2025 | The Tower Jakarta</p>
-              <a href="{{ route('event.detail', 'specta-flash-sale') }}" class="text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors inline-flex items-center gap-1">
-                Lihat Detail <i class="fas fa-arrow-right text-xs"></i>
-              </a>
-            </div>
-          </div>
+          @endforeach
         </div>
       </div>
     </section>
+    @endif
 @endsection

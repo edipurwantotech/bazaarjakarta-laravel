@@ -77,6 +77,21 @@ class HomeController extends Controller
             ->with('categories')
             ->firstOrFail();
         
+        // Get related events from the same category (max 3)
+        $relatedEvents = [];
+        if ($event->categories->isNotEmpty()) {
+            $categoryId = $event->categories->first()->id;
+            $relatedEvents = Event::where('status', 'published')
+                ->where('id', '!=', $event->id) // Exclude current event
+                ->whereHas('categories', function ($query) use ($categoryId) {
+                    $query->where('event_categories.id', $categoryId);
+                })
+                ->orderBy('start_date', 'desc')
+                ->with('categories')
+                ->take(3)
+                ->get();
+        }
+        
         // Get WhatsApp number from settings
         $whatsappNumber = Setting::getValue('whatsapp_number', '+628123456789');
         
@@ -85,7 +100,7 @@ class HomeController extends Controller
         $metaDescription = $event->meta_description ?? Str::limit(strip_tags($event->description), 160);
         $metaKeywords = $event->meta_keywords;
         
-        return view('event-detail', compact('event', 'whatsappNumber', 'title', 'metaDescription', 'metaKeywords'));
+        return view('event-detail', compact('event', 'relatedEvents', 'whatsappNumber', 'title', 'metaDescription', 'metaKeywords'));
     }
 
     /**

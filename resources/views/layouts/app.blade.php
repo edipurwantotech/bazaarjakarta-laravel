@@ -183,7 +183,7 @@
         <div class="grid md:grid-cols-4 gap-8">
           <div class="md:col-span-2">
             <div class="flex items-center gap-2 mb-4">
-              <img src="{{ asset('images/logo-bazaar.-white.png') }}" alt="Logo Bazaar Jakarta" class="h-10" />
+              <img src="{{ asset('images/logo-bazaar-white.png') }}" alt="Logo Bazaar Jakarta" class="h-10" />
             </div>
             <p class="text-sm leading-relaxed mb-4">
               BazaarJakarta.id di bawah PT. Kreatif Jakarta Indotama adalah perusahaan di bidang event organizer, event production, sewa tenda, digital campaign, expo, concert, corporate event, dan kegiatan kreatif lainnya.

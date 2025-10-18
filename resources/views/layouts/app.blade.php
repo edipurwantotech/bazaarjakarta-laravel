@@ -25,6 +25,14 @@
     <!-- Sitemap -->
     <link rel="sitemap" type="application/xml" href="{{ url('/sitemap.xml') }}">
     
+    <!-- Google Site Verification -->
+    @php
+        $googleSiteVerification = \App\Models\Setting::getValue('google_site_verification');
+    @endphp
+    @if($googleSiteVerification)
+    <meta name="google-site-verification" content="{{ $googleSiteVerification }}" />
+    @endif
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {

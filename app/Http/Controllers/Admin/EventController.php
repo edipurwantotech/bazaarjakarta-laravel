@@ -218,6 +218,9 @@ class EventController extends BaseAdminController
             $event->highlightEvents()->detach();
         }
 
+        // Clear the cache for this event
+        cache()->forget("event_detail_{$event->slug}");
+        
         return redirect()
             ->route('admin.events.index')
             ->with('success', 'Event updated successfully.');

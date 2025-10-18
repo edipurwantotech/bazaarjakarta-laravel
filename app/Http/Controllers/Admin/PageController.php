@@ -130,6 +130,9 @@ class PageController extends BaseAdminController
 
         $page->update($validated);
 
+        // Clear the cache for this page
+        cache()->forget("page_detail_{$page->slug}");
+        
         return redirect()
             ->route('admin.pages.index')
             ->with('success', 'Page updated successfully.');

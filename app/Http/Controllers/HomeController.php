@@ -72,35 +72,42 @@ class HomeController extends Controller
      */
     public function eventDetail($slug)
     {
-        // Fetch the event data from database
-        $event = Event::where('slug', $slug)
-            ->with('categories')
-            ->firstOrFail();
+        // Use cache to store event data for 24 hours
+        $cacheKey = "event_detail_{$slug}";
         
-        // Get related events from the same category (max 3)
-        $relatedEvents = [];
-        if ($event->categories->isNotEmpty()) {
-            $categoryId = $event->categories->first()->id;
-            $relatedEvents = Event::where('status', 'published')
-                ->where('id', '!=', $event->id) // Exclude current event
-                ->whereHas('categories', function ($query) use ($categoryId) {
-                    $query->where('event_categories.id', $categoryId);
-                })
-                ->orderBy('start_date', 'desc')
+        $data = cache()->remember($cacheKey, now()->addHours(24), function () use ($slug) {
+            // Fetch the event data from database
+            $event = Event::where('slug', $slug)
                 ->with('categories')
-                ->take(3)
-                ->get();
-        }
+                ->firstOrFail();
+            
+            // Get related events from the same category (max 3)
+            $relatedEvents = [];
+            if ($event->categories->isNotEmpty()) {
+                $categoryId = $event->categories->first()->id;
+                $relatedEvents = Event::where('status', 'published')
+                    ->where('id', '!=', $event->id) // Exclude current event
+                    ->whereHas('categories', function ($query) use ($categoryId) {
+                        $query->where('event_categories.id', $categoryId);
+                    })
+                    ->orderBy('start_date', 'desc')
+                    ->with('categories')
+                    ->take(3)
+                    ->get();
+            }
+            
+            // Get WhatsApp number from settings
+            $whatsappNumber = Setting::getValue('whatsapp_number', '+628123456789');
+            
+            // Prepare meta data for event
+            $title = $event->meta_title ?? $event->title;
+            $metaDescription = $event->meta_description ?? Str::limit(strip_tags($event->description), 160);
+            $metaKeywords = $event->meta_keywords;
+            
+            return compact('event', 'relatedEvents', 'whatsappNumber', 'title', 'metaDescription', 'metaKeywords');
+        });
         
-        // Get WhatsApp number from settings
-        $whatsappNumber = Setting::getValue('whatsapp_number', '+628123456789');
-        
-        // Prepare meta data for event
-        $title = $event->meta_title ?? $event->title;
-        $metaDescription = $event->meta_description ?? Str::limit(strip_tags($event->description), 160);
-        $metaKeywords = $event->meta_keywords;
-        
-        return view('event-detail', compact('event', 'relatedEvents', 'whatsappNumber', 'title', 'metaDescription', 'metaKeywords'));
+        return view('event-detail', $data);
     }
 
     /**
@@ -242,36 +249,43 @@ class HomeController extends Controller
      */
     public function pageDetail($slug)
     {
-        // Fetch the page data from database
-        $page = Page::where('slug', $slug)
-            ->where('status', 'published')
-            ->firstOrFail();
+        // Use cache to store page data for 24 hours
+        $cacheKey = "page_detail_{$slug}";
         
-        // Get frontend menus
-        $frontendMenus = Menu::frontend()
-            ->parents()
-            ->with(['children' => function ($query) {
-                $query->frontend()->ordered();
-            }])
-            ->ordered()
-            ->get();
+        $data = cache()->remember($cacheKey, now()->addHours(24), function () use ($slug) {
+            // Fetch the page data from database
+            $page = Page::where('slug', $slug)
+                ->where('status', 'published')
+                ->firstOrFail();
+            
+            // Get frontend menus
+            $frontendMenus = Menu::frontend()
+                ->parents()
+                ->with(['children' => function ($query) {
+                    $query->frontend()->ordered();
+                }])
+                ->ordered()
+                ->get();
+            
+            // Get WhatsApp number from settings
+            $whatsappNumber = Setting::getValue('whatsapp_number', '+628123456789');
+            
+            // Get social media links from settings
+            $socialMedia = [
+                'facebook' => Setting::getValue('facebook', '#'),
+                'instagram' => Setting::getValue('instagram', '#'),
+                'youtube' => Setting::getValue('youtube', '#'),
+                'tiktok' => Setting::getValue('tiktok', '#'),
+            ];
+            
+            // Prepare meta data for page
+            $title = $page->meta_title ?? $page->title;
+            $metaDescription = $page->meta_description ?? Str::limit(strip_tags($page->content), 160);
+            $metaKeywords = $page->meta_keywords;
+            
+            return compact('page', 'frontendMenus', 'whatsappNumber', 'socialMedia', 'title', 'metaDescription', 'metaKeywords');
+        });
         
-        // Get WhatsApp number from settings
-        $whatsappNumber = Setting::getValue('whatsapp_number', '+628123456789');
-        
-        // Get social media links from settings
-        $socialMedia = [
-            'facebook' => Setting::getValue('facebook', '#'),
-            'instagram' => Setting::getValue('instagram', '#'),
-            'youtube' => Setting::getValue('youtube', '#'),
-            'tiktok' => Setting::getValue('tiktok', '#'),
-        ];
-        
-        // Prepare meta data for page
-        $title = $page->meta_title ?? $page->title;
-        $metaDescription = $page->meta_description ?? Str::limit(strip_tags($page->content), 160);
-        $metaKeywords = $page->meta_keywords;
-        
-        return view('page-detail', compact('page', 'frontendMenus', 'whatsappNumber', 'socialMedia', 'title', 'metaDescription', 'metaKeywords'));
+        return view('page-detail', $data);
     }
 }

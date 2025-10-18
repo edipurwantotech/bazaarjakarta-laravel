@@ -1,6 +1,52 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- Schema.org Event Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": "{{ $event->title }}",
+        "description": {{ Str::limit(strip_tags($event->description), 300) }},
+        "url": "{{ url('/event/' . $event->slug) }}",
+        "startDate": "{{ $event->start_date->format('Y-m-d') }}{{ $event->time ? 'T' . $event->time->format('H:i') : '' }}",
+        @if($event->end_date)
+        "endDate": "{{ $event->end_date->format('Y-m-d') }}{{ $event->time ? 'T' . $event->time->format('H:i') : '' }}",
+        @endif
+        @if($event->location)
+        "location": {
+            "@type": "Place",
+            "name": "{{ $event->location }}"
+        },
+        @endif
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "image": [
+            @if($event->thumbnail)
+            "{{ asset('storage/' . $event->thumbnail) }}",
+            @endif
+            "{{ asset('images/logo-bazaar.png') }}"
+        ],
+        "organizer": {
+            "@type": "Organization",
+            "name": "Bazaar Jakarta",
+            "url": "{{ url('/') }}",
+            "logo": "{{ asset('images/logo-bazaar.png') }}"
+        },
+        "performer": {
+            "@type": "Organization",
+            "name": "Bazaar Jakarta"
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "IDR",
+            "availability": "https://schema.org/InStock",
+            "url": "https://wa.me/{{ preg_replace('/[^0-9+]/', '', $whatsappNumber ?? '+628123456789') }}?text=Halo%20BazaarJakarta.ID,%20saya%20ingin%20mendaftar%20untuk%20event:%20{{ urlencode($event->title) }}"
+        }
+    }
+    </script>
+    
     <!-- HERO EVENT -->
     <section class="relative py-10 bg-gradient-to-br from-orange-50 to-white">
       <div class="container mx-auto px-4 md:px-8">

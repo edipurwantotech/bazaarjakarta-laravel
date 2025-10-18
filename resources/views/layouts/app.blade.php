@@ -21,6 +21,10 @@
     @else
     <meta name="keywords" content="{{ \App\Models\Setting::getValue('seo_keywords', 'Bazaar Jakarta, Event Bazaar, Jual Beli, UMKM, Pasar Lokal, Komunitas') }}">
     @endif
+    
+    <!-- Sitemap -->
+    <link rel="sitemap" type="application/xml" href="{{ url('/sitemap.xml') }}">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {

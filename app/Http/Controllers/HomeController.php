@@ -218,4 +218,45 @@ class HomeController extends Controller
         
         return view('events.category', compact('frontendMenus', 'events', 'category', 'whatsappNumber', 'socialMedia', 'title', 'metaDescription', 'metaKeywords'));
     }
+
+    /**
+     * Display the page detail.
+     *
+     * @param string $slug
+     * @return \Illuminate\View\View
+     */
+    public function pageDetail($slug)
+    {
+        // Fetch the page data from database
+        $page = Page::where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+        
+        // Get frontend menus
+        $frontendMenus = Menu::frontend()
+            ->parents()
+            ->with(['children' => function ($query) {
+                $query->frontend()->ordered();
+            }])
+            ->ordered()
+            ->get();
+        
+        // Get WhatsApp number from settings
+        $whatsappNumber = Setting::getValue('whatsapp_number', '+628123456789');
+        
+        // Get social media links from settings
+        $socialMedia = [
+            'facebook' => Setting::getValue('facebook', '#'),
+            'instagram' => Setting::getValue('instagram', '#'),
+            'youtube' => Setting::getValue('youtube', '#'),
+            'tiktok' => Setting::getValue('tiktok', '#'),
+        ];
+        
+        // Prepare meta data for page
+        $title = $page->meta_title ?? $page->title;
+        $metaDescription = $page->meta_description ?? Str::limit(strip_tags($page->content), 160);
+        $metaKeywords = $page->meta_keywords;
+        
+        return view('page-detail', compact('page', 'frontendMenus', 'whatsappNumber', 'socialMedia', 'title', 'metaDescription', 'metaKeywords'));
+    }
 }

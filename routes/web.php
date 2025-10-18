@@ -21,6 +21,8 @@ Route::get('/event/{slug}', [HomeController::class, 'eventDetail'])->name('event
 
 Route::get('/page/{slug}', [HomeController::class, 'pageDetail'])->name('page.detail');
 
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 Route::get('/events/load-more', [HomeController::class, 'loadMoreEvents'])->name('events.load-more');
 Route::get('/events/search', [HomeController::class, 'searchEvents'])->name('events.search');
 Route::get('/events/category/{slug}', [HomeController::class, 'eventsByCategory'])->name('events.category');

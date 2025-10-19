@@ -20,11 +20,9 @@
               <div class="h-56 relative overflow-hidden">
                 @if($event->thumbnail)
                   <img
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f3f4f6' width='400' height='300'/%3E%3C/svg%3E"
-                    data-src="{{ asset('storage/' . $event->thumbnail) }}"
+                    src="{{ asset('storage/' . $event->thumbnail) }}"
                     alt="{{ $event->title }}"
-                    class="w-full h-full object-cover lazy"
-                    loading="lazy"
+                    class="w-full h-full object-cover"
                   />
                 @else
                   <div class="absolute inset-0 bg-gradient-to-br {{ $index == 0 ? 'from-orange-400 to-orange-600' : ($index == 1 ? 'from-purple-400 to-pink-600' : 'from-green-400 to-blue-600') }} flex items-center justify-center">
@@ -157,11 +155,9 @@
             <div class="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center hover:bg-gray-100 transition-colors min-h-[100px]">
               @if($partner->logo)
                 <img
-                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 80'%3E%3Crect fill='%23e5e7eb' width='200' height='80'/%3E%3C/svg%3E"
-                  data-src="{{ asset('storage/' . $partner->logo) }}"
+                  src="{{ asset('storage/' . $partner->logo) }}"
                   alt="{{ $partner->name }}"
-                  class="h-10 max-w-full object-contain filter grayscale hover:grayscale-0 transition-all mb-2 lazy"
-                  loading="lazy"
+                  class="h-10 max-w-full object-contain filter grayscale hover:grayscale-0 transition-all mb-2"
                 />
               @else
                 <div class="h-10 w-20 bg-gray-300 rounded flex items-center justify-center mb-2">
@@ -179,59 +175,9 @@
       </div>
     </section>
 
-    <!-- Lazy Loading and Infinite Scroll Script -->
+    <!-- Infinite Scroll Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Lazy loading implementation
-            if ('IntersectionObserver' in window) {
-                const imageObserver = new IntersectionObserver((entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            const src = img.getAttribute('data-src');
-                            
-                            if (src) {
-                                img.src = src;
-                                img.classList.remove('lazy');
-                                imageObserver.unobserve(img);
-                            }
-                        }
-                    });
-                });
-
-                // Observe all lazy images
-                document.querySelectorAll('img.lazy').forEach(img => {
-                    imageObserver.observe(img);
-                });
-            } else {
-                // Fallback for browsers that don't support IntersectionObserver
-                const lazyImages = document.querySelectorAll('img.lazy');
-                
-                function lazyLoad() {
-                    lazyImages.forEach(img => {
-                        if (img.getBoundingClientRect().top <= window.innerHeight && img.getBoundingClientRect().bottom >= 0 && getComputedStyle(img).display !== 'none') {
-                            const src = img.getAttribute('data-src');
-                            if (src) {
-                                img.src = src;
-                                img.classList.remove('lazy');
-                            }
-                        }
-                    });
-                    
-                    // If all images are loaded, remove scroll event listener
-                    if (lazyImages.length === 0) {
-                        document.removeEventListener('scroll', lazyLoad);
-                        window.removeEventListener('resize', lazyLoad);
-                        window.removeEventListener('orientationChange', lazyLoad);
-                    }
-                }
-                
-                document.addEventListener('scroll', lazyLoad);
-                window.addEventListener('resize', lazyLoad);
-                window.addEventListener('orientationChange', lazyLoad);
-                lazyLoad(); // Initial check
-            }
-
             // Infinite scroll implementation
             let page = 2; // Start from page 2 since we already loaded the first 6 events
             const loadMoreBtn = document.getElementById('load-more-events');
@@ -262,13 +208,6 @@
                             
                             while (tempDiv.firstChild) {
                                 eventsContainer.appendChild(tempDiv.firstChild);
-                            }
-                            
-                            // Re-observe new lazy images after adding them to DOM
-                            if ('IntersectionObserver' in window) {
-                                document.querySelectorAll('img.lazy').forEach(img => {
-                                    imageObserver.observe(img);
-                                });
                             }
                             
                             page++;

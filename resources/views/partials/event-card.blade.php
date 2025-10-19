@@ -2,11 +2,9 @@
   <div class="relative h-64 overflow-hidden">
     @if($event->thumbnail)
       <img
-        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f3f4f6' width='400' height='300'/%3E%3C/svg%3E"
-        data-src="{{ asset('storage/' . $event->thumbnail) }}"
+        src="{{ asset('storage/' . $event->thumbnail) }}"
         alt="{{ $event->title }}"
-        class="w-full h-full object-cover lazy"
-        loading="lazy"
+        class="w-full h-full object-cover"
       />
     @else
       <div class="absolute inset-0 bg-gradient-to-br {{ $index % 3 == 0 ? 'from-orange-400 to-orange-600' : ($index % 3 == 1 ? 'from-purple-400 to-pink-600' : 'from-green-400 to-blue-600') }}"></div>

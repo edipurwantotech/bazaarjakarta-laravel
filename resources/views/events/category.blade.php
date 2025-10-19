@@ -25,7 +25,13 @@
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl animate-fade-in" style="animation-delay: {{ $index * 0.1 }}s">
                         @if($event->thumbnail)
                             <div class="h-48 overflow-hidden">
-                                <img src="{{ asset('storage/' . $event->thumbnail) }}" alt="{{ $event->title }}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                                <img
+                                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f3f4f6' width='400' height='300'/%3E%3C/svg%3E"
+                                    data-src="{{ asset('storage/' . $event->thumbnail) }}"
+                                    alt="{{ $event->title }}"
+                                    class="w-full h-full object-cover transition-transform duration-500 hover:scale-110 lazy"
+                                    loading="lazy"
+                                />
                             </div>
                         @else
                             <div class="h-48 bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
@@ -99,6 +105,56 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Lazy loading implementation
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.getAttribute('data-src');
+                    
+                    if (src) {
+                        img.src = src;
+                        img.classList.remove('lazy');
+                        imageObserver.unobserve(img);
+                    }
+                }
+            });
+        });
+
+        // Observe all lazy images
+        document.querySelectorAll('img.lazy').forEach(img => {
+            imageObserver.observe(img);
+        });
+    } else {
+        // Fallback for browsers that don't support IntersectionObserver
+        const lazyImages = document.querySelectorAll('img.lazy');
+        
+        function lazyLoad() {
+            lazyImages.forEach(img => {
+                if (img.getBoundingClientRect().top <= window.innerHeight && img.getBoundingClientRect().bottom >= 0 && getComputedStyle(img).display !== 'none') {
+                    const src = img.getAttribute('data-src');
+                    if (src) {
+                        img.src = src;
+                        img.classList.remove('lazy');
+                    }
+                }
+            });
+            
+            // If all images are loaded, remove scroll event listener
+            if (lazyImages.length === 0) {
+                document.removeEventListener('scroll', lazyLoad);
+                window.removeEventListener('resize', lazyLoad);
+                window.removeEventListener('orientationChange', lazyLoad);
+            }
+        }
+        
+        document.addEventListener('scroll', lazyLoad);
+        window.addEventListener('resize', lazyLoad);
+        window.addEventListener('orientationChange', lazyLoad);
+        lazyLoad(); // Initial check
+    }
+
     let isLoading = false;
     let currentPage = {{ $events->currentPage() }};
     let hasMorePages = {{ $events->hasMorePages() ? 'true' : 'false' }};
@@ -147,6 +203,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     eventClone.style.animationDelay = `${(currentPage - 1) * 6 + index) * 0.1}s`;
                     eventsContainer.appendChild(eventClone);
                 });
+                
+                // Re-observe new lazy images after adding them to DOM
+                if ('IntersectionObserver' in window) {
+                    document.querySelectorAll('img.lazy').forEach(img => {
+                        imageObserver.observe(img);
+                    });
+                }
                 
                 // Update current page
                 currentPage++;

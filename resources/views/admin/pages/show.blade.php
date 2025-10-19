@@ -38,7 +38,7 @@
             <!-- Content -->
             <div class="divider">Content</div>
             <div class="prose max-w-none my-4">
-                {!! $page->content !!}
+                {!! Purifier::clean($page->content) !!}
             </div>
 
             <!-- SEO Information -->

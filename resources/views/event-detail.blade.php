@@ -80,11 +80,9 @@
             @if($event->thumbnail)
               <div class="mb-6">
                 <img
-                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Crect fill='%23f3f4f6' width='800' height='400'/%3E%3C/svg%3E"
-                  data-src="{{ asset('storage/' . $event->thumbnail) }}"
+                  src="{{ asset('storage/' . $event->thumbnail) }}"
                   alt="{{ $event->title }}"
-                  class="w-full rounded-xl shadow-lg lazy"
-                  loading="lazy"
+                  class="w-full rounded-xl shadow-lg"
                 />
               </div>
             @endif
@@ -96,11 +94,9 @@
                 @foreach($event->galleries as $gallery)
                   <div class="mb-4">
                     <img
-                      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f3f4f6' width='400' height='300'/%3E%3C/svg%3E"
-                      data-src="{{ asset('storage/' . $gallery->image) }}"
+                      src="{{ asset('storage/' . $gallery->image) }}"
                       alt="{{ $gallery->caption ?? $event->title }}"
-                      class="w-full rounded-xl shadow-lg lazy"
-                      loading="lazy"
+                      class="w-full rounded-xl shadow-lg"
                     />
                     @if($gallery->caption)
                       <p class="text-center text-gray-600 text-sm mt-2">{{ $gallery->caption }}</p>
@@ -127,7 +123,7 @@
             <div class="mb-8">
               <h2 class="text-2xl font-bold mb-4">Tentang Event</h2>
               <div class="text-gray-600 leading-relaxed">
-                {!! $event->description !!}
+                {!! Purifier::clean($event->description) !!}
               </div>
             </div>
 
@@ -230,11 +226,9 @@
             <div class="h-48 relative overflow-hidden">
               @if($relatedEvent->thumbnail)
                 <img
-                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f3f4f6' width='400' height='300'/%3E%3C/svg%3E"
-                  data-src="{{ asset('storage/' . $relatedEvent->thumbnail) }}"
+                  src="{{ asset('storage/' . $relatedEvent->thumbnail) }}"
                   alt="{{ $relatedEvent->title }}"
-                  class="w-full h-full object-cover lazy"
-                  loading="lazy"
+                  class="w-full h-full object-cover"
                 />
               @else
                 <div class="absolute inset-0 bg-gradient-to-br {{ $index % 3 == 0 ? 'from-orange-400 to-orange-600' : ($index % 3 == 1 ? 'from-purple-400 to-pink-600' : 'from-green-400 to-blue-600') }}"></div>
@@ -263,58 +257,4 @@
     </section>
     @endif
 
-    <!-- Lazy Loading Script -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Lazy loading implementation
-        if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        const src = img.getAttribute('data-src');
-                        
-                        if (src) {
-                            img.src = src;
-                            img.classList.remove('lazy');
-                            imageObserver.unobserve(img);
-                        }
-                    }
-                });
-            });
-
-            // Observe all lazy images
-            document.querySelectorAll('img.lazy').forEach(img => {
-                imageObserver.observe(img);
-            });
-        } else {
-            // Fallback for browsers that don't support IntersectionObserver
-            const lazyImages = document.querySelectorAll('img.lazy');
-            
-            function lazyLoad() {
-                lazyImages.forEach(img => {
-                    if (img.getBoundingClientRect().top <= window.innerHeight && img.getBoundingClientRect().bottom >= 0 && getComputedStyle(img).display !== 'none') {
-                        const src = img.getAttribute('data-src');
-                        if (src) {
-                            img.src = src;
-                            img.classList.remove('lazy');
-                        }
-                    }
-                });
-                
-                // If all images are loaded, remove scroll event listener
-                if (lazyImages.length === 0) {
-                    document.removeEventListener('scroll', lazyLoad);
-                    window.removeEventListener('resize', lazyLoad);
-                    window.removeEventListener('orientationChange', lazyLoad);
-                }
-            }
-            
-            document.addEventListener('scroll', lazyLoad);
-            window.addEventListener('resize', lazyLoad);
-            window.addEventListener('orientationChange', lazyLoad);
-            lazyLoad(); // Initial check
-        }
-    });
-    </script>
 @endsection

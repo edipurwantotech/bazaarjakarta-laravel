@@ -40,7 +40,7 @@
               </div>
               <div class="p-4">
                 <h3 class="font-bold text-lg text-orange-600 mb-2">{{ $event->title }}</h3>
-                <p class="text-gray-600 text-sm mb-3">{{ Str::limit($event->description, 100) }}</p>
+                <p class="text-gray-600 text-sm mb-3">{{ Str::limit(strip_tags($event->description), 100) }}</p>
                 <a href="{{ route('event.detail', $event->slug) }}" class="text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors inline-flex items-center gap-1">
                   SELENGKAPNYA <i class="fas fa-arrow-right text-xs"></i>
                 </a>

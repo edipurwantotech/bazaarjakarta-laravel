@@ -121,7 +121,7 @@
             <div class="divider">Description</div>
             <div class="prose max-w-none my-4">
                 @if($event->description)
-                    {!! $event->description !!}
+                    {!! Purifier::clean($event->description) !!}
                 @else
                     <p class="text-gray-500">No description provided.</p>
                 @endif

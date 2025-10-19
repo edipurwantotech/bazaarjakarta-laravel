@@ -15,7 +15,7 @@
         <div class="container mx-auto px-4 md:px-8">
             <div class="max-w-4xl mx-auto">
                 <div class="prose prose-lg max-w-none">
-                    {!! $page->content !!}
+                    {!! Purifier::clean($page->content) !!}
                 </div>
             </div>
         </div>

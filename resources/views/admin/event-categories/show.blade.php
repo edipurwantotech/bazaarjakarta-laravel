@@ -60,7 +60,7 @@
                                 <span class="label-text font-semibold">Description</span>
                             </label>
                             <div class="bg-base-200 p-3 rounded-lg min-h-[100px]">
-                                {!! $eventCategory->description ?? 'No description provided' !!}
+                                {!! Purifier::clean($eventCategory->description) ?? 'No description provided' !!}
                             </div>
                         </div>
 

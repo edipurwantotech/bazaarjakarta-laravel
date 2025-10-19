@@ -17,13 +17,13 @@
                 @else
                     <i class="fas fa-folder"></i>
                 @endif
-                {{ $menu->title }}
+                {{ e($menu->title) }}
                 <i class="fas fa-chevron-down ml-1"></i>
             </label>
             <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-[9999]">
                 @foreach($menu->children as $child)
                     <li>
-                        <a href="{{ $child->url }}"
+                        <a href="{{ e($child->url) }}"
                            class="{{ request()->is(ltrim($child->url, '/')) || request()->is(ltrim($child->url, '/*')) ? 'active' : '' }}">
                             @if($child->title == 'All Events')
                                 <i class="fas fa-calendar"></i>
@@ -40,7 +40,7 @@
                             @else
                                 <i class="fas fa-chevron-right"></i>
                             @endif
-                            {{ $child->title }}
+                            {{ e($child->title) }}
                         </a>
                     </li>
                 @endforeach
@@ -48,7 +48,7 @@
         </div>
     @else
         <!-- Single Menu Item -->
-        <a href="{{ $menu->url }}" class="btn btn-ghost {{ request()->is(ltrim($menu->url, '/')) || request()->is(ltrim($menu->url, '/*')) ? 'bg-orange-100' : '' }}">
+        <a href="{{ e($menu->url) }}" class="btn btn-ghost {{ request()->is(ltrim($menu->url, '/')) || request()->is(ltrim($menu->url, '/*')) ? 'bg-orange-100' : '' }}">
             @if($menu->title == 'Master')
                 <i class="fas fa-cog"></i>
             @elseif($menu->title == 'Events')
@@ -58,7 +58,7 @@
             @else
                 <i class="fas fa-folder"></i>
             @endif
-            {{ $menu->title }}
+            {{ e($menu->title) }}
         </a>
     @endif
 @endforeach

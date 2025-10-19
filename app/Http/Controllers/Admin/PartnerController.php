@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Partner;
 use App\Models\Menu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class PartnerController extends BaseAdminController
@@ -52,16 +53,34 @@ class PartnerController extends BaseAdminController
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif',
+                'max:2048',
+                'dimensions:min_width=100,min_height=100,max_width=3000,max_height=3000'
+            ],
             'website' => 'nullable|url|max:255',
             'description' => 'nullable|string',
             'order_number' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
 
-        // Handle logo upload
+        // Handle logo upload with security enhancements
         if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('partners', 'public');
+            $file = $request->file('logo');
+            
+            // Additional security checks
+            if (!$file->isValid() || $file->getSize() > 2048 * 1024) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->withErrors(['logo' => 'Invalid file or file too large.']);
+            }
+            
+            // Generate safe filename
+            $safeFilename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $logoPath = $file->storeAs('partners', $safeFilename, 'public');
             $validated['logo'] = $logoPath;
         }
 
@@ -122,15 +141,31 @@ class PartnerController extends BaseAdminController
                 'max:255',
                 Rule::unique('partners')->ignore($partner->id),
             ],
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif',
+                'max:2048',
+                'dimensions:min_width=100,min_height=100,max_width=3000,max_height=3000'
+            ],
             'website' => 'nullable|url|max:255',
             'description' => 'nullable|string',
             'order_number' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
 
-        // Handle logo upload
+        // Handle logo upload with security enhancements
         if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            
+            // Additional security checks
+            if (!$file->isValid() || $file->getSize() > 2048 * 1024) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->withErrors(['logo' => 'Invalid file or file too large.']);
+            }
+            
             // Delete old logo if exists
             if ($partner->logo) {
                 $oldLogoPath = public_path('storage/' . $partner->logo);
@@ -139,7 +174,9 @@ class PartnerController extends BaseAdminController
                 }
             }
             
-            $logoPath = $request->file('logo')->store('partners', 'public');
+            // Generate safe filename
+            $safeFilename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $logoPath = $file->storeAs('partners', $safeFilename, 'public');
             $validated['logo'] = $logoPath;
         }
 

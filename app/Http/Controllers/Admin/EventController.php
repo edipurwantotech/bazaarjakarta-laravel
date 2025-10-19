@@ -61,7 +61,13 @@ class EventController extends BaseAdminController
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:events',
             'description' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'thumbnail' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif',
+                'max:2048',
+                'dimensions:min_width=100,min_height=100,max_width=3000,max_height=3000'
+            ],
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'time' => 'nullable|date_format:H:i',
@@ -82,9 +88,21 @@ class EventController extends BaseAdminController
             $validated['slug'] = Str::slug($validated['title']);
         }
 
-        // Handle thumbnail upload
+        // Handle thumbnail upload with security enhancements
         if ($request->hasFile('thumbnail')) {
-            $thumbnailPath = $request->file('thumbnail')->store('events', 'public');
+            $file = $request->file('thumbnail');
+            
+            // Additional security checks
+            if (!$file->isValid() || $file->getSize() > 2048 * 1024) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->withErrors(['thumbnail' => 'Invalid file or file too large.']);
+            }
+            
+            // Generate safe filename
+            $safeFilename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $thumbnailPath = $file->storeAs('events', $safeFilename, 'public');
             $validated['thumbnail'] = $thumbnailPath;
         }
 
@@ -167,7 +185,13 @@ class EventController extends BaseAdminController
                 Rule::unique('events')->ignore($event->id),
             ],
             'description' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'thumbnail' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,gif',
+                'max:2048',
+                'dimensions:min_width=100,min_height=100,max_width=3000,max_height=3000'
+            ],
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'time' => 'nullable|date_format:H:i',
@@ -188,8 +212,18 @@ class EventController extends BaseAdminController
             $validated['slug'] = Str::slug($validated['title']);
         }
 
-        // Handle thumbnail upload
+        // Handle thumbnail upload with security enhancements
         if ($request->hasFile('thumbnail')) {
+            $file = $request->file('thumbnail');
+            
+            // Additional security checks
+            if (!$file->isValid() || $file->getSize() > 2048 * 1024) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->withErrors(['thumbnail' => 'Invalid file or file too large.']);
+            }
+            
             // Delete old thumbnail if exists
             if ($event->thumbnail) {
                 $oldThumbnailPath = public_path('storage/' . $event->thumbnail);
@@ -198,7 +232,9 @@ class EventController extends BaseAdminController
                 }
             }
             
-            $thumbnailPath = $request->file('thumbnail')->store('events', 'public');
+            // Generate safe filename
+            $safeFilename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $thumbnailPath = $file->storeAs('events', $safeFilename, 'public');
             $validated['thumbnail'] = $thumbnailPath;
         }
 

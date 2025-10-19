@@ -40,7 +40,7 @@
               </div>
               <div class="p-4">
                 <h3 class="font-bold text-lg text-orange-600 mb-2">{{ $event->title }}</h3>
-                <p class="text-gray-600 text-sm mb-3">{!! Str::limit($event->description, 100) !!}</p>
+                <p class="text-gray-600 text-sm mb-3">{{ Str::limit($event->description, 100) }}</p>
                 <a href="{{ route('event.detail', $event->slug) }}" class="text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors inline-flex items-center gap-1">
                   SELENGKAPNYA <i class="fas fa-arrow-right text-xs"></i>
                 </a>
@@ -99,8 +99,9 @@
             Kami adalah mitra terpercaya untuk semua kebutuhan acara Anda, dari konsep hingga eksekusi yang sempurna
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://wa.me/{{ preg_replace('/[^0-9+]/', '', $whatsappNumber ?? '+628123456789') }}?text=Halo%20BazaarJakarta.ID,%20saya%20ingin%20bertanya%20tentang%20event%20anda"
+            <a href="https://wa.me/{{ preg_replace('/[^0-9+]/', '', htmlspecialchars($whatsappNumber ?? '+628123456789', ENT_QUOTES, 'UTF-8')) }}?text=Halo%20BazaarJakarta.ID,%20saya%20ingin%20bertanya%20tentang%20event%20anda"
                target="_blank"
+               rel="noopener noreferrer"
                class="bg-white text-orange-600 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors">
               <i class="fas fa-phone-alt mr-2"></i>Hubungi Kami
             </a>
@@ -202,13 +203,16 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.html) {
-                            // Append new events
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = data.html;
+                            // Append new events safely using DOMParser to prevent XSS
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(data.html, 'text/html');
+                            const newEvents = doc.body.childNodes;
                             
-                            while (tempDiv.firstChild) {
-                                eventsContainer.appendChild(tempDiv.firstChild);
-                            }
+                            newEvents.forEach(node => {
+                                if (node.nodeType === Node.ELEMENT_NODE) {
+                                    eventsContainer.appendChild(node.cloneNode(true));
+                                }
+                            });
                             
                             page++;
                             
@@ -224,7 +228,10 @@
                                 // No more events, show message
                                 const noMoreMessage = document.createElement('div');
                                 noMoreMessage.className = 'col-span-3 text-center mt-4';
-                                noMoreMessage.innerHTML = '<p class="text-gray-500">Semua event telah ditampilkan</p>';
+                                const messageText = document.createElement('p');
+                                messageText.className = 'text-gray-500';
+                                messageText.textContent = 'Semua event telah ditampilkan';
+                                noMoreMessage.appendChild(messageText);
                                 eventsContainer.appendChild(noMoreMessage);
                             }
                         }

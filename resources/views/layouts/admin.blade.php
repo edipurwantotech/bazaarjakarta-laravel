@@ -100,7 +100,7 @@
                         <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                             <li>
                                 <div class="justify-between">
-                                    <span>{{ Auth::user()->name }}</span>
+                                    <span>{{ e(Auth::user()->name) }}</span>
                                     <span class="badge badge-primary">Admin</span>
                                 </div>
                             </li>
@@ -129,7 +129,7 @@
             <footer class="footer footer-center p-4 bg-base-300 text-base-content">
                 <div class="flex items-center">
                     <p>Develop By</p>
-                    <a href="https://jasawebpekanbaru.com/" target="_blank" class="link link-hover text-orange-600 ml-1">Jasa Pembuatan Website</a>
+                    <a href="https://jasawebpekanbaru.com/" target="_blank" rel="noopener noreferrer" class="link link-hover text-orange-600 ml-1">Jasa Pembuatan Website</a>
                 </div>
             </footer>
         </div>
@@ -154,8 +154,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <p class="font-semibold">{{ Auth::user()->name }}</p>
-                                    <p class="text-xs opacity-70">{{ Auth::user()->email }}</p>
+                                    <p class="font-semibold">{{ e(Auth::user()->name) }}</p>
+                                    <p class="text-xs opacity-70">{{ e(Auth::user()->email) }}</p>
                                     <div class="badge badge-primary badge-sm mt-1">Administrator</div>
                                 </div>
                             </div>

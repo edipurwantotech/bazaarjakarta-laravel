@@ -26,7 +26,7 @@
   </div>
   <div class="p-6">
     <h3 class="text-orange-600 font-bold text-xl mb-3">{{ $event->title }}</h3>
-    <p class="text-gray-600 text-sm mb-4">{!! Str::limit($event->description, 100) !!}</p>
+    <p class="text-gray-600 text-sm mb-4">{{ Str::limit($event->description, 100) }}</p>
     <div class="flex justify-between items-center">
       <a href="{{ route('event.detail', $event->slug) }}" class="text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors inline-flex items-center gap-1">
         SELENGKAPNYA <i class="fas fa-arrow-right text-xs"></i>

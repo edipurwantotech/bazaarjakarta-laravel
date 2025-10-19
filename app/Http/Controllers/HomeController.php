@@ -118,7 +118,21 @@ class HomeController extends Controller
      */
     public function loadMoreEvents(Request $request)
     {
-        $page = $request->get('page', 1);
+        // Validate and sanitize page parameter
+        $page = (int) $request->get('page', 1);
+        if ($page < 1) {
+            $page = 1;
+        }
+        
+        // Limit maximum pages to prevent potential abuse
+        $maxPage = 100;
+        if ($page > $maxPage) {
+            return response()->json([
+                'html' => '',
+                'hasMore' => false
+            ]);
+        }
+        
         $perPage = 6;
         
         $events = Event::where('status', 'published')
@@ -152,7 +166,14 @@ class HomeController extends Controller
      */
     public function searchEvents(Request $request)
     {
+        // Validate and sanitize input
         $query = $request->get('q', '');
+        $query = htmlspecialchars(strip_tags($query), ENT_QUOTES, 'UTF-8');
+        
+        // Limit query length to prevent potential issues
+        if (strlen($query) > 100) {
+            $query = substr($query, 0, 100);
+        }
         
         // Get frontend menus
         $frontendMenus = Menu::frontend()
@@ -174,21 +195,23 @@ class HomeController extends Controller
             'tiktok' => Setting::getValue('tiktok', '#'),
         ];
         
-        // Search events
+        // Search events with additional validation
         $events = Event::where('status', 'published')
             ->where(function ($q) use ($query) {
-                $q->where('title', 'LIKE', "%{$query}%")
-                  ->orWhere('description', 'LIKE', "%{$query}%")
-                  ->orWhere('location', 'LIKE', "%{$query}%");
+                if (!empty($query)) {
+                    $q->where('title', 'LIKE', "%{$query}%")
+                      ->orWhere('description', 'LIKE', "%{$query}%")
+                      ->orWhere('location', 'LIKE', "%{$query}%");
+                }
             })
             ->orderBy('start_date', 'desc')
             ->with('categories')
             ->paginate(6);
         
-        // Prepare meta data for search page
-        $title = "Pencarian Event: {$query}";
-        $metaDescription = "Temukan event yang sesuai dengan pencarian Anda: {$query}";
-        $metaKeywords = "pencarian event, {$query}, bazaar jakarta";
+        // Prepare meta data for search page with escaped output
+        $title = "Pencarian Event: " . e($query);
+        $metaDescription = "Temukan event yang sesuai dengan pencarian Anda: " . e($query);
+        $metaKeywords = "pencarian event, " . e($query) . ", bazaar jakarta";
         
         return view('events.search', compact('frontendMenus', 'events', 'query', 'whatsappNumber', 'socialMedia', 'title', 'metaDescription', 'metaKeywords'));
     }

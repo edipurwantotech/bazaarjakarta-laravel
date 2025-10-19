@@ -7,6 +7,7 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class SettingsController extends BaseAdminController
 {
@@ -98,7 +99,13 @@ class SettingsController extends BaseAdminController
                         $validationMessages["{$key}.url"] = "The {$setting->name} must be a valid URL.";
                         break;
                     case 'image':
-                        $validationRules[$key] = 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048';
+                        $validationRules[$key] = [
+                            'nullable',
+                            'image',
+                            'mimes:jpeg,png,jpg,gif',
+                            'max:2048',
+                            'dimensions:min_width=100,min_height=100,max_width=3000,max_height=3000'
+                        ];
                         break;
                 }
                 
@@ -123,8 +130,27 @@ class SettingsController extends BaseAdminController
                     }
                 }
                 
-                // Handle file uploads
+                // Handle file uploads with security enhancements
                 if ($setting->type === 'image' && $request->hasFile($key)) {
+                    $file = $request->file($key);
+                    
+                    // Additional security checks
+                    if (!$file->isValid() || $file->getSize() > 2048 * 1024) {
+                        if ($request->ajax() || $request->wantsJson()) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Invalid file or file too large.',
+                                'errors' => [$key => 'Invalid file or file too large.']
+                            ], 422);
+                        }
+                        
+                        return redirect()
+                            ->route('admin.settings.index')
+                            ->withFragment($activeTab)
+                            ->withErrors([$key => 'Invalid file or file too large.'])
+                            ->withInput();
+                    }
+                    
                     // Delete old image if exists
                     if ($setting->value) {
                         $oldImagePath = public_path('storage/' . $setting->value);
@@ -133,8 +159,9 @@ class SettingsController extends BaseAdminController
                         }
                     }
                     
-                    // Upload new image
-                    $imagePath = $request->file($key)->store('settings', 'public');
+                    // Generate safe filename
+                    $safeFilename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                    $imagePath = $file->storeAs('settings', $safeFilename, 'public');
                     Setting::where('key', $key)->update(['value' => $imagePath]);
                 } elseif ($setting->type !== 'image') {
                     // Update text-based settings
@@ -237,7 +264,13 @@ class SettingsController extends BaseAdminController
                         $validationMessages["{$key}.url"] = "The {$setting->name} must be a valid URL.";
                         break;
                     case 'image':
-                        $validationRules[$key] = 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048';
+                        $validationRules[$key] = [
+                            'nullable',
+                            'image',
+                            'mimes:jpeg,png,jpg,gif',
+                            'max:2048',
+                            'dimensions:min_width=100,min_height=100,max_width=3000,max_height=3000'
+                        ];
                         break;
                 }
                 
@@ -254,8 +287,19 @@ class SettingsController extends BaseAdminController
                     }
                 }
                 
-                // Handle file uploads
+                // Handle file uploads with security enhancements
                 if ($setting->type === 'image' && $request->hasFile($key)) {
+                    $file = $request->file($key);
+                    
+                    // Additional security checks
+                    if (!$file->isValid() || $file->getSize() > 2048 * 1024) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Invalid file or file too large.',
+                            'errors' => [$key => 'Invalid file or file too large.']
+                        ], 422);
+                    }
+                    
                     // Delete old image if exists
                     if ($setting->value) {
                         $oldImagePath = public_path('storage/' . $setting->value);
@@ -264,8 +308,9 @@ class SettingsController extends BaseAdminController
                         }
                     }
                     
-                    // Upload new image
-                    $imagePath = $request->file($key)->store('settings', 'public');
+                    // Generate safe filename
+                    $safeFilename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                    $imagePath = $file->storeAs('settings', $safeFilename, 'public');
                     Setting::where('key', $key)->update(['value' => $imagePath]);
                 } elseif ($setting->type !== 'image') {
                     // Update text-based settings

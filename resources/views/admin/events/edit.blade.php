@@ -107,7 +107,7 @@
                             <i class="fas fa-eye mr-1"></i> Visual Editor
                         </button>
                         <button type="button" id="toggleSource" class="btn btn-sm btn-outline">
-                            <i class="fas fa-code mr-1"></i> HTML Source
+                            <i class="fas fa-code mr-1"></i> HTML Code
                         </button>
                     </div>
                     <div id="wysiwyg-container">

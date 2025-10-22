@@ -92,11 +92,27 @@
                             Content
                         </span>
                     </label>
-                    <div class="relative">
-                        <textarea name="content" 
-                                  class="textarea textarea-bordered h-64 w-full @error('content') textarea-error @enderror pl-10" 
-                                  placeholder="Enter the page content...">{{ old('content', $page->content) }}</textarea>
-                        <i class="fas fa-align-left absolute left-3 top-3 text-gray-400"></i>
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" id="toggleWysiwyg" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye mr-1"></i> Visual Editor
+                        </button>
+                        <button type="button" id="toggleSource" class="btn btn-sm btn-outline">
+                            <i class="fas fa-code mr-1"></i> HTML Source
+                        </button>
+                    </div>
+                    <div id="wysiwyg-container">
+                        <div id="content-editor">
+                            <textarea name="content"
+                                      id="content"
+                                      class="hidden"
+                                      placeholder="Enter the page content...">{{ old('content', $page->content) }}</textarea>
+                        </div>
+                    </div>
+                    <div id="content-source" style="display: none;">
+                        <textarea name="content_source"
+                                  id="content-source-textarea"
+                                  class="textarea textarea-bordered h-64 w-full font-mono text-sm"
+                                  placeholder="Enter HTML code...">{{ old('content', $page->content) }}</textarea>
                     </div>
                     @error('content')
                     <label class="label">
@@ -252,6 +268,112 @@ document.addEventListener('DOMContentLoaded', function() {
                 .replace(/^-|-$/g, '');
         } else {
             slugPreview.textContent = 'page-title';
+        }
+    });
+    
+    // Initialize CKEditor for content
+    ClassicEditor
+        .create(document.querySelector('#content-editor'), {
+            toolbar: [
+                'heading', '|',
+                'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+                'outdent', 'indent', '|',
+                'imageUpload', 'blockQuote', 'insertTable', 'mediaEmbed', '|',
+                'undo', 'redo'
+            ],
+            placeholder: 'Enter the page content...',
+            height: 300
+        })
+        .then(editor => {
+            // Store the editor instance
+            window.contentEditor = editor;
+            
+            // Set initial content
+            const initialContent = document.getElementById('content').value;
+            if (initialContent) {
+                editor.setData(initialContent);
+                document.getElementById('content-source-textarea').value = initialContent;
+            }
+            
+            // Update the hidden textarea when content changes
+            editor.model.document.on('change:data', () => {
+                const content = editor.getData();
+                document.getElementById('content').value = content;
+                document.getElementById('content-source-textarea').value = content;
+            });
+        })
+        .catch(error => {
+            console.error(error);
+        });
+    
+    // Toggle between WYSIWYG and source code
+    const toggleWysiwyg = document.getElementById('toggleWysiwyg');
+    const toggleSource = document.getElementById('toggleSource');
+    const wysiwygContainer = document.getElementById('wysiwyg-container');
+    const sourceContainer = document.getElementById('content-source');
+    const sourceTextarea = document.getElementById('content-source-textarea');
+    const hiddenTextarea = document.getElementById('content');
+    
+    // Initialize with source container hidden
+    sourceContainer.style.display = 'none';
+    
+    toggleWysiwyg.addEventListener('click', function() {
+        console.log('Switching to WYSIWYG mode');
+        
+        // Update editor content from source
+        if (window.contentEditor && sourceTextarea.value) {
+            const sourceContent = sourceTextarea.value;
+            window.contentEditor.setData(sourceContent);
+            hiddenTextarea.value = sourceContent;
+        }
+        
+        // Show editor, hide source
+        wysiwygContainer.style.display = 'block';
+        sourceContainer.style.display = 'none';
+        
+        // Update button styles
+        toggleWysiwyg.classList.add('btn-primary');
+        toggleWysiwyg.classList.remove('btn-outline');
+        toggleSource.classList.remove('btn-primary');
+        toggleSource.classList.add('btn-outline');
+    });
+    
+    toggleSource.addEventListener('click', function() {
+        console.log('Switching to Source mode');
+        
+        // Update source from editor
+        if (window.contentEditor) {
+            const editorContent = window.contentEditor.getData();
+            sourceTextarea.value = editorContent;
+            hiddenTextarea.value = editorContent;
+        }
+        
+        // Show source, hide editor
+        wysiwygContainer.style.display = 'none';
+        sourceContainer.style.display = 'block';
+        
+        // Update button styles
+        toggleSource.classList.add('btn-primary');
+        toggleSource.classList.remove('btn-outline');
+        toggleWysiwyg.classList.remove('btn-primary');
+        toggleWysiwyg.classList.add('btn-outline');
+    });
+    
+    // Update hidden textarea when source textarea changes
+    sourceTextarea.addEventListener('input', function() {
+        hiddenTextarea.value = this.value;
+    });
+    
+    // Initialize source textarea with any existing content
+    if (hiddenTextarea.value) {
+        sourceTextarea.value = hiddenTextarea.value;
+    }
+    
+    // Before form submission, make sure CKEditor content is saved to the textarea
+    document.querySelector('form').addEventListener('submit', function() {
+        if (window.contentEditor) {
+            const content = window.contentEditor.getData();
+            document.getElementById('content').value = content;
         }
     });
 });

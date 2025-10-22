@@ -115,11 +115,27 @@
                             Description
                         </span>
                     </label>
-                    <div id="description-editor">
-                        <textarea name="description"
-                                  id="description"
-                                  class="hidden"
-                                  placeholder="Describe the event...">{{ old('description') }}</textarea>
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" id="toggleWysiwyg" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye mr-1"></i> Visual Editor
+                        </button>
+                        <button type="button" id="toggleSource" class="btn btn-sm btn-outline">
+                            <i class="fas fa-code mr-1"></i> HTML Source
+                        </button>
+                    </div>
+                    <div id="wysiwyg-container">
+                        <div id="description-editor">
+                            <textarea name="description"
+                                      id="description"
+                                      class="hidden"
+                                      placeholder="Describe the event...">{{ old('description') }}</textarea>
+                        </div>
+                    </div>
+                    <div id="description-source" style="display: none;">
+                        <textarea name="description_source"
+                                  id="description-source-textarea"
+                                  class="textarea textarea-bordered h-64 w-full font-mono text-sm"
+                                  placeholder="Enter HTML code...">{{ old('description') }}</textarea>
                     </div>
                     @error('description')
                     <label class="label">
@@ -480,17 +496,82 @@ document.addEventListener('DOMContentLoaded', function() {
             const initialContent = document.getElementById('description').value;
             if (initialContent) {
                 editor.setData(initialContent);
+                document.getElementById('description-source-textarea').value = initialContent;
             }
             
             // Update the hidden textarea when content changes
             editor.model.document.on('change:data', () => {
                 const content = editor.getData();
                 document.getElementById('description').value = content;
+                document.getElementById('description-source-textarea').value = content;
             });
         })
         .catch(error => {
             console.error(error);
         });
+    
+    // Toggle between WYSIWYG and source code
+    const toggleWysiwyg = document.getElementById('toggleWysiwyg');
+    const toggleSource = document.getElementById('toggleSource');
+    const wysiwygContainer = document.getElementById('wysiwyg-container');
+    const sourceContainer = document.getElementById('description-source');
+    const sourceTextarea = document.getElementById('description-source-textarea');
+    const hiddenTextarea = document.getElementById('description');
+    
+    // Initialize with source container hidden
+    sourceContainer.style.display = 'none';
+    
+    toggleWysiwyg.addEventListener('click', function() {
+        console.log('Switching to WYSIWYG mode');
+        
+        // Update editor content from source
+        if (window.descriptionEditor && sourceTextarea.value) {
+            const sourceContent = sourceTextarea.value;
+            window.descriptionEditor.setData(sourceContent);
+            hiddenTextarea.value = sourceContent;
+        }
+        
+        // Show editor, hide source
+        wysiwygContainer.style.display = 'block';
+        sourceContainer.style.display = 'none';
+        
+        // Update button styles
+        toggleWysiwyg.classList.add('btn-primary');
+        toggleWysiwyg.classList.remove('btn-outline');
+        toggleSource.classList.remove('btn-primary');
+        toggleSource.classList.add('btn-outline');
+    });
+    
+    toggleSource.addEventListener('click', function() {
+        console.log('Switching to Source mode');
+        
+        // Update source from editor
+        if (window.descriptionEditor) {
+            const editorContent = window.descriptionEditor.getData();
+            sourceTextarea.value = editorContent;
+            hiddenTextarea.value = editorContent;
+        }
+        
+        // Show source, hide editor
+        wysiwygContainer.style.display = 'none';
+        sourceContainer.style.display = 'block';
+        
+        // Update button styles
+        toggleSource.classList.add('btn-primary');
+        toggleSource.classList.remove('btn-outline');
+        toggleWysiwyg.classList.remove('btn-primary');
+        toggleWysiwyg.classList.add('btn-outline');
+    });
+    
+    // Update hidden textarea when source textarea changes
+    sourceTextarea.addEventListener('input', function() {
+        hiddenTextarea.value = this.value;
+    });
+    
+    // Initialize source textarea with any existing content
+    if (hiddenTextarea.value) {
+        sourceTextarea.value = hiddenTextarea.value;
+    }
 
     // Highlight Events Autocomplete
     const searchInput = document.getElementById('highlightEventsSearch');

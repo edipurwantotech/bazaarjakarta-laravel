@@ -11,7 +11,7 @@
             </a>
         </div>
         <h1 class="text-3xl font-bold text-orange-600">Edit Page</h1>
-        <p class="text-base-content/70">Update page information</p>
+        <p class="text-base-content/70">oUpdate page information</p>
     </div>
 
     <!-- Validation Errors -->
